@@ -31,7 +31,15 @@ public class Product {
 		
 		try {
 			this.category = Category.valueOf(category);
-			setTax(tax);
+
+			if(tax.equals("CategoryTax")){
+				this.tax = new CategoryTax(this.category);
+			}else if(tax.equals("AbsoluteTax")) {
+				this.tax = new absoluteTax();
+			}else {
+				throw new TaxException();
+			}
+			
 		}catch(TaxException e) {
 			System.out.println(e.getMessage());
 		}catch(IllegalArgumentException e) {
@@ -49,6 +57,7 @@ public class Product {
 
 	public void setDescription(String description) {
 		this.description = description;
+		
 	}
 
 	public Double getPrice() {
@@ -57,6 +66,7 @@ public class Product {
 
 	public void setPrice(Double price) {
 		this.price = price;
+		upUpdateDate();
 	}
 	
 	public Integer getQuantity() {
@@ -65,14 +75,21 @@ public class Product {
 
 	public void setQuantity(Integer quantity) {
 		this.quantity = quantity;
+		upUpdateDate();
 	}
 
 	public Category getCategory() {
 		return category;
 	}
 
-	public void setCategory(Category category) {
-		this.category = category;
+	public void setCategory(String category) {
+		try {
+			this.category = Category.valueOf(category);
+			upUpdateDate();
+		}catch(IllegalArgumentException e) {
+			System.out.println("Erro: Categoria não identificada! : " + e.getMessage());
+		}
+		
 	}
 
 	public Tax getTax() {
@@ -82,11 +99,15 @@ public class Product {
 	public void setTax(String tax) throws TaxException {
 		if(tax.equals("CategoryTax")){
 			this.tax = new CategoryTax(this.category);
+			upUpdateDate();
 		}else if(tax.equals("AbsoluteTax")) {
 			this.tax = new absoluteTax();
+			upUpdateDate();
 		}else {
 			throw new TaxException();
 		}
+		
+		//
 	}
 
 	public Instant getRegisterDate() {
@@ -101,8 +122,18 @@ public class Product {
 		this.updateDate = Instant.now();
 	}
 	
+	public void down(Product p) {
+		this.quantity -= p.getQuantity();
+	}
 	
+	public void calcTax() {
+		this.getTax().calcTax(getQuantity() * getPrice());
+	}
 
+	public String toStringInSale() {
+		return getBarCode() + "|" + getDescription() + "|" + getPrice() + "|" + getQuantity();
+	}
+	
 	@Override
 	public String toString() {
 		return getBarCode() + "," + getDescription() + "," + getPrice() + "," + getQuantity() + "," 
